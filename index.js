@@ -85,18 +85,25 @@ function addDepartment() {
                 name: 'dept_name',
                 message: 'Enter the name of the department:',
             },
+            {
+                type: 'input',
+                name: 'dept_manager',
+                message: 'Enter the name of the department manager:',
+            },
         ])
         .then((deptAnswer) => {
             connection.query(
-                'INSERT INTO departments (dept_name) VALUES (?)',
-                [deptAnswer.dept_name],
+                'INSERT INTO departments (dept_name, dept_manager) VALUES (?, ?)',
+                [deptAnswer.dept_name, deptAnswer.dept_manager],
                 (error, results) => {
                     if (error) throw error;
+                    console.log('Department added successfully.');
                     startApp();
                 }
             );
         });
 }
+
 
 function addRole() {
     connection.query('SELECT dept_name FROM departments', (error, results) => {
