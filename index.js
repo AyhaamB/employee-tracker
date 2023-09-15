@@ -16,7 +16,7 @@ function displayTable(data, headers) {
 }
 
 function viewAllDepartments() {
-    connection.query('SELECT id, dept_name FROM departments', (error, results) => {
+    connection.query('SELECT id, dept_name, dept_manager FROM departments', (error, results) => {
       if (error) throw error;
   
       // Transform the results into an array of objects
@@ -24,10 +24,11 @@ function viewAllDepartments() {
         return {
           'Department ID': result.id,
           'Department Name': result.dept_name,
+          'Department Manager': result.dept_manager
         };
       });
   
-      displayTable(formattedResults, ['Department ID', 'Department Name']);
+      displayTable(formattedResults, ['Department ID', 'Department Name', 'Department Manager']);
       startApp();
     });
 }
@@ -53,7 +54,7 @@ function viewAllRoles() {
 }
 
 function viewAllEmployees() {
-    connection.query('SELECT roles.id, roles.title, roles.salary, departments.dept_name AS department, employees.first_name, employees.last_name FROM roles INNER JOIN departments ON roles.department_id = departments.id INNER JOIN employees ON roles.id = employees.role_id;',
+    connection.query('SELECT roles.id, roles.title, roles.salary, departments.dept_name AS department, employees.first_name, employees.last_name, departments.dept_manager AS `Department Manager` FROM roles INNER JOIN departments ON roles.department_id = departments.id INNER JOIN employees ON roles.id = employees.role_id;',
     (error, results) => {
       if (error) throw error;
   
@@ -66,13 +67,15 @@ function viewAllEmployees() {
           'Title': result.title,
           'Salary': result.salary,
           'Department': result.department,
+          'Department Manager': result['Department Manager'],
         };
       });
-
-      displayTable(formattedResults, ['First Name', 'Last Name', 'Role ID', 'Department', 'Title', 'Salary']);
+  
+      displayTable(formattedResults, ['First Name', 'Last Name', 'Role ID', 'Department', 'Title', 'Salary', 'Department Manager']);
       startApp();
     });
-}
+  }
+  
   
 function addDepartment() {
     inquirer
@@ -144,6 +147,107 @@ function addRole() {
     });
 }
 
+function addEmployee() {
+    connection.query('SELECT id, title FROM roles', (error, results) => {
+        if (error) throw error;
+
+        const roleChoices = results.map((result) => result.title);
+
+        inquirer
+            .prompt([
+                {
+                    type: 'input',
+                    name: 'first_name',
+                    message: 'Enter the first name of the employee:',
+                },
+                {
+                    type: 'input',
+                    name: 'last_name',
+                    message: 'Enter the last name of the employee:',
+                },
+                {
+                    type: 'list',
+                    name: 'role',
+                    message: 'Select the role for this employee:',
+                    choices: roleChoices,
+                },
+            ])
+            .then((employeeAnswer) => {
+                const selectedRole = results.find((result) => result.title === employeeAnswer.role);
+
+                if (!selectedRole) {
+                    console.log('Error: Role not found.');
+                    startApp();
+                    return;
+                }
+
+                const roleId = selectedRole.id;
+
+                connection.query(
+                    'INSERT INTO employees (first_name, last_name, role_id) VALUES (?, ?, ?)',
+                    [
+                        employeeAnswer.first_name,
+                        employeeAnswer.last_name,
+                        roleId,
+                    ],
+                    (error, results) => {
+                        if (error) throw error;
+                        console.log('Employee added successfully.');
+                        startApp();
+                    }
+                );
+            });
+    });
+}
+
+function updateEmployeeRole() {
+    connection.query('SELECT id, CONCAT(first_name, " ", last_name) AS full_name FROM employees', (error, employeeResults) => {
+        if (error) throw error;
+
+        connection.query('SELECT id, title FROM roles', (error, roleResults) => {
+            if (error) throw error;
+
+            const employeeChoices = employeeResults.map((employee) => ({
+                name: employee.full_name,
+                value: employee.id,
+            }));
+
+            const roleChoices = roleResults.map((role) => ({
+                name: role.title,
+                value: role.id,
+            }));
+
+            inquirer
+                .prompt([
+                    {
+                        type: 'list',
+                        name: 'employeeId',
+                        message: 'Select the employee to update:',
+                        choices: employeeChoices,
+                    },
+                    {
+                        type: 'list',
+                        name: 'newRoleId',
+                        message: 'Select the new role for the employee:',
+                        choices: roleChoices,
+                    },
+                ])
+                .then((answers) => {
+                    connection.query(
+                        'UPDATE employees SET role_id = ? WHERE id = ?',
+                        [answers.newRoleId, answers.employeeId],
+                        (error, results) => {
+                            if (error) throw error;
+                            console.log('Employee role updated successfully.');
+                            startApp();
+                        }
+                    );
+                });
+        });
+    });
+}
+
+
 function startApp() {
   inquirer
     .prompt([
@@ -157,6 +261,8 @@ function startApp() {
           'View All Roles',
           'Add Role',
           'View All Employees',
+          'Add Employee',
+          'Update Employee Role',
           'Exit',
         ],
       },
@@ -177,6 +283,12 @@ function startApp() {
           break;
         case 'View All Employees':
           viewAllEmployees();
+          break;
+        case 'Add Employee':
+          addEmployee();
+          break;
+        case 'Update Employee Role':
+          updateEmployeeRole();
           break;
         // Add cases for other actions here...
         case 'Exit':

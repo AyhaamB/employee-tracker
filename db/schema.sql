@@ -6,7 +6,8 @@ USE emp_manager;
 -- Create the departments table
 CREATE TABLE departments (
   id INT PRIMARY KEY AUTO_INCREMENT,
-  dept_name VARCHAR(30) NOT NULL
+  dept_name VARCHAR(30) NOT NULL,
+  dept_manager VARCHAR(30) NOT NULL
 );
 
 -- Create the roles table
