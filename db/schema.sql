@@ -3,14 +3,12 @@ CREATE DATABASE emp_manager;
 
 USE emp_manager;
 
--- Create the departments table
 CREATE TABLE departments (
   id INT PRIMARY KEY AUTO_INCREMENT,
   dept_name VARCHAR(30) NOT NULL,
   dept_manager VARCHAR(30) NOT NULL
 );
 
--- Create the roles table
 CREATE TABLE roles (
   id INT PRIMARY KEY AUTO_INCREMENT,
   title VARCHAR(30) NOT NULL,
@@ -19,7 +17,6 @@ CREATE TABLE roles (
   FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 
--- Create the employees table
 CREATE TABLE employees (
   id INT PRIMARY KEY AUTO_INCREMENT,
   first_name VARCHAR(30) NOT NULL,

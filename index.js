@@ -38,7 +38,6 @@ function viewAllRoles() {
     (error, results) => {
       if (error) throw error;
   
-      // Transform the results into an array of objects
       const formattedResults = results.map((result) => {
         return {
           'Role ID': result.id,
@@ -58,7 +57,6 @@ function viewAllEmployees() {
     (error, results) => {
       if (error) throw error;
   
-      // Transform the results into an array of objects
       const formattedResults = results.map((result) => {
         return {
           'First Name': result.first_name,
